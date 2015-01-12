@@ -40,10 +40,6 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author steffen
- *
- */
 public class Main {
 	static Logger LOGGER = LoggerFactory.getLogger(Main.class);
 	private static String tarFile;
@@ -63,68 +59,44 @@ public class Main {
 	private static Writer writer = null;
 	private static TreeMap<Integer, GpxFile> metadata = null;
 	private static String metadataFilename;
-
 	private static Options cmdOptions;
+	private static CommandLine cmd = null;
 
 	public static void main(String[] args) throws CompressorException,
 			IOException {
-		// read command line arguments
-		CommandLine cmd = null;
-		HelpFormatter helpFormater = new HelpFormatter();
-		CommandLineParser cmdParser = new BasicParser();
-		cmdOptions = new Options();
-		setupArgumentOptions();
-		// parse arguments
-		try {
-			cmd = cmdParser.parse(cmdOptions, args);
-			if (cmd.hasOption('h')) {
-				helpFormater.printHelp("Main.class", cmdOptions);
-				return;
-			}
-			assignArguments(cmd);
-		} catch (ParseException parseException) {
-			LOGGER.info(parseException.getMessage());
-			helpFormater.printHelp("Main.class", cmdOptions);
-			return;
-		}
+		parseArguments(args);
 
-		
 		// init Filter
 		GpxFilter filter = new GpxFilter(bboxLeft, bboxRight, bboxBottom,
-				bboxTop,bboxClip, elevationOnly );
-		
+				bboxTop, bboxClip, elevationOnly);
+
 		// initialize reader
 		TarArchiveInputStream tarIn = new TarArchiveInputStream(
 				new CompressorStreamFactory().createCompressorInputStream(
 						CompressorStreamFactory.XZ, new BufferedInputStream(
 								new FileInputStream(tarFile))));
-	
 		readMetadata();
 
 		// init writer
 		if (cmd.hasOption("wd")) {
 			writer = new DumpWriter(filter, outputFileDump, metadataFilename);
 		} else if (cmd.hasOption("wpg")) {
-			writer = new PGSqlWriter(filter, dbName, dbUser, dbPassword, dbHost, dbPort);
-		}else if (cmd.hasOption("ws")){
+			writer = new PGSqlWriter(filter, dbName, dbUser, dbPassword,
+					dbHost, dbPort);
+		} else if (cmd.hasOption("ws")) {
 			writer = new ShapeFileWriter(outputFileShape, filter);
 		}
 		writer.init();
 
-	
-
 		TarArchiveEntry tarEntry;
 		int processed = 0;
-		int filterPassed = 0;
-		int filterRejected = 0;
-
 
 		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
 			if (tarEntry.isFile()) {
 				if (isGPX(tarEntry.getName())) {
 					byte[] content = new byte[(int) tarEntry.getSize()];
 					tarIn.read(content);
-					// TODO: parse GPX file
+					// write GPX file with specified writer
 					Gpx gpx = null;
 					try {
 						JAXBContext jc = JAXBContext
@@ -137,10 +109,8 @@ public class Main {
 						gpx = root.getValue();
 						int id = getGpxId(tarEntry);
 
-		
-							writer.write(gpx, tarEntry.getName(),
-									metadata.get(id));
-			
+						writer.write(gpx, tarEntry.getName(), metadata.get(id));
+
 					} catch (JAXBException ex) {
 						ex.printStackTrace();
 					}
@@ -148,64 +118,34 @@ public class Main {
 			}
 
 			processed++;
-			LOGGER.info(processed+"");
+			LOGGER.info(processed + "");
 		}
 		tarIn.close();
 		writer.close();
 		filter.printStats();
 		LOGGER.info("files processed:       " + processed);
 
-
 	}
 
-	private static void readMetadata() throws IOException, CompressorException {
-		// initialize reader
-		TarArchiveInputStream tarIn = new TarArchiveInputStream(
-				new CompressorStreamFactory().createCompressorInputStream(
-						CompressorStreamFactory.XZ, new BufferedInputStream(
-								new FileInputStream(tarFile))));
-
-		TarArchiveEntry tarEntry;
-		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
-			if (isMetaXML(tarEntry.getName())) {
-				//TODO: add argument to constructor of Dumpwriter
-				metadataFilename=tarEntry.getName();
-				LOGGER.info("save metadata to memory");
-				byte[] content = new byte[(int) tarEntry.getSize()];
-				tarIn.read(content);
-				// parse metadata file
-				try {
-					JAXBContext jc = JAXBContext
-							.newInstance("gpx_filter.metadata.schema");
-					Unmarshaller unmarshaller = jc.createUnmarshaller();
-					JAXBElement<GpxFiles> root = (JAXBElement<GpxFiles>) unmarshaller
-							.unmarshal(new StreamSource(
-									new ByteArrayInputStream(content)),
-									GpxFiles.class);
-					GpxFiles gpxFiles = root.getValue();
-					metadata = new TreeMap<Integer, GpxFile>();
-					List<GpxFile> gpxFileList = gpxFiles.getGpxFile();
-					for (int w = 0; w < gpxFileList.size(); w++) {
-						GpxFile meta = gpxFileList.get(w);
-						metadata.put(meta.getId(), meta);
-					}
-
-				} catch (JAXBException ex) {
-					ex.printStackTrace();
-				}
+	private static void parseArguments(String[] args) {
+		// read command line arguments
+		HelpFormatter helpFormater = new HelpFormatter();
+		CommandLineParser cmdParser = new BasicParser();
+		cmdOptions = new Options();
+		setupArgumentOptions();
+		// parse arguments
+		try {
+			cmd = cmdParser.parse(cmdOptions, args);
+			if (cmd.hasOption('h')) {
+				helpFormater.printHelp("GPX Filter", cmdOptions);
+				System.exit(0);
 			}
-
+			assignArguments(cmd);
+		} catch (ParseException parseException) {
+			LOGGER.info(parseException.getMessage());
+			helpFormater.printHelp("GPX Filter", cmdOptions);
+			System.exit(1);
 		}
-		tarIn.close();
-		LOGGER.info("metadata successfully stored. GpxFiles: "
-				+ metadata.size());
-	}
-
-	private static int getGpxId(TarArchiveEntry tarEntry) {
-		String n = tarEntry.getName();
-		return Integer.valueOf(n.substring(n.lastIndexOf("/") + 1,
-				n.lastIndexOf(".")));
-
 	}
 
 	private static void setupArgumentOptions() {
@@ -223,13 +163,16 @@ public class Main {
 		// filter option elevation
 		cmdOptions.addOption(new Option("e", "elevation", false,
 				"only use GPX-files if they have elevation information"));
-		cmdOptions.addOption(new Option("c", "Clip Bounding Box", false,
-				"Clip GPS traces at bounding box. This option is only applied for PQSql and Shape output."));
-		// writer options (check if only one writer options of these three are
-		// selected)
+		cmdOptions
+				.addOption(new Option(
+						"c",
+						"Clip Bounding Box",
+						false,
+						"Clip GPS traces at bounding box. This option is only applied for PQSql and Shape output."));
+		// writer options
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-shape")
 				.withDescription("path to output shape file").hasArg()
-				.create("ws"));
+				.withArgName("path to output shape file").create("ws"));
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-dump")
 				.withDescription("path to output dump file (gpx-planet.tar.xz")
 				.hasArg().create("wd"));
@@ -237,7 +180,6 @@ public class Main {
 				.withDescription("connection parameters for database")
 				.hasArgs(5).withArgName("db> <user> <password> <host> <port")
 				.withValueSeparator(' ').create("wpg"));
-
 	}
 
 	private static void assignArguments(CommandLine cmd) throws ParseException {
@@ -347,6 +289,55 @@ public class Main {
 			return false;
 		}
 		return true;
+	}
+
+	private static void readMetadata() throws IOException, CompressorException {
+		// initialize reader
+		TarArchiveInputStream tarIn = new TarArchiveInputStream(
+				new CompressorStreamFactory().createCompressorInputStream(
+						CompressorStreamFactory.XZ, new BufferedInputStream(
+								new FileInputStream(tarFile))));
+
+		TarArchiveEntry tarEntry;
+		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
+			if (isMetaXML(tarEntry.getName())) {
+				metadataFilename = tarEntry.getName();
+				LOGGER.info("save metadata to memory");
+				byte[] content = new byte[(int) tarEntry.getSize()];
+				tarIn.read(content);
+				// parse metadata file
+				try {
+					JAXBContext jc = JAXBContext
+							.newInstance("gpx_filter.metadata.schema");
+					Unmarshaller unmarshaller = jc.createUnmarshaller();
+					JAXBElement<GpxFiles> root = (JAXBElement<GpxFiles>) unmarshaller
+							.unmarshal(new StreamSource(
+									new ByteArrayInputStream(content)),
+									GpxFiles.class);
+					GpxFiles gpxFiles = root.getValue();
+					metadata = new TreeMap<Integer, GpxFile>();
+					List<GpxFile> gpxFileList = gpxFiles.getGpxFile();
+					for (int w = 0; w < gpxFileList.size(); w++) {
+						GpxFile meta = gpxFileList.get(w);
+						metadata.put(meta.getId(), meta);
+					}
+
+				} catch (JAXBException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+		}
+		tarIn.close();
+		LOGGER.info("metadata successfully stored. GpxFiles: "
+				+ metadata.size());
+	}
+
+	private static int getGpxId(TarArchiveEntry tarEntry) {
+		String n = tarEntry.getName();
+		return Integer.valueOf(n.substring(n.lastIndexOf("/") + 1,
+				n.lastIndexOf(".")));
+
 	}
 
 	private static boolean isMetaXML(String name) {
