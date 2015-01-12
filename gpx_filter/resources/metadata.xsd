@@ -1,0 +1,34 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="gpxFiles">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="gpxFile" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="description"/>
+              <xs:element name="tags" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="tag" maxOccurs="unbounded" minOccurs="0"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:int" name="id" use="optional"/>
+            <xs:attribute type="xs:dateTime" name="timestamp" use="optional"/>
+            <xs:attribute type="xs:short" name="points" use="optional"/>
+            <xs:attribute type="xs:float" name="lat" use="optional"/>
+            <xs:attribute type="xs:float" name="lon" use="optional"/>
+            <xs:attribute type="xs:string" name="visibility" use="optional"/>
+            <xs:attribute type="xs:int" name="uid" use="optional"/>
+            <xs:attribute type="xs:string" name="user" use="optional"/>
+            <xs:attribute type="xs:string" name="filename" use="optional"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:float" name="version"/>
+      <xs:attribute type="xs:string" name="generator"/>
+      <xs:attribute type="xs:dateTime" name="timestamp"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
