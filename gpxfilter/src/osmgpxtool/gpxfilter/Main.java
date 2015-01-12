@@ -100,7 +100,7 @@ public class Main {
 					Gpx gpx = null;
 					try {
 						JAXBContext jc = JAXBContext
-								.newInstance("gpx_filter.gpx.schema");
+								.newInstance("osmgpxtool.gpxfilter.gpx.schema");
 						Unmarshaller unmarshaller = jc.createUnmarshaller();
 						JAXBElement<Gpx> root = (JAXBElement<Gpx>) unmarshaller
 								.unmarshal(new StreamSource(
@@ -117,14 +117,11 @@ public class Main {
 				}
 			}
 
-			processed++;
-			LOGGER.info(processed + "");
 		}
 		tarIn.close();
 		writer.close();
 		filter.printStats();
-		LOGGER.info("files processed:       " + processed);
-
+		LOGGER.info("Filter task done...");
 	}
 
 	private static void parseArguments(String[] args) {
@@ -302,13 +299,13 @@ public class Main {
 		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
 			if (isMetaXML(tarEntry.getName())) {
 				metadataFilename = tarEntry.getName();
-				LOGGER.info("save metadata to memory");
+				LOGGER.info("Save metadata to memory...");
 				byte[] content = new byte[(int) tarEntry.getSize()];
 				tarIn.read(content);
 				// parse metadata file
 				try {
 					JAXBContext jc = JAXBContext
-							.newInstance("gpx_filter.metadata.schema");
+							.newInstance("osmgpxtool.gpxfilter.metadata.schema");
 					Unmarshaller unmarshaller = jc.createUnmarshaller();
 					JAXBElement<GpxFiles> root = (JAXBElement<GpxFiles>) unmarshaller
 							.unmarshal(new StreamSource(
@@ -329,7 +326,7 @@ public class Main {
 
 		}
 		tarIn.close();
-		LOGGER.info("metadata successfully stored. GpxFiles: "
+		LOGGER.info("Metadata successfully parsed. Number of Gpx-Files: "
 				+ metadata.size());
 	}
 
