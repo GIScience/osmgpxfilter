@@ -1,15 +1,15 @@
-package gpx_filter;
-
-import gpx_filter.gpx.schema.Gpx;
-import gpx_filter.gpx.schema.Gpx.Trk;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+package osmgpxtool.gpxfilter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import osmgpxtool.gpxfilter.gpx.schema.Gpx;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;

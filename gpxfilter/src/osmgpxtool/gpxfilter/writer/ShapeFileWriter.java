@@ -1,11 +1,4 @@
-package gpx_filter.writer;
-
-import gpx_filter.GpxFilter;
-import gpx_filter.gpx.schema.Gpx;
-import gpx_filter.gpx.schema.Gpx.Trk;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
-import gpx_filter.metadata.schema.GpxFiles.GpxFile;
+package osmgpxtool.gpxfilter.writer;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +24,13 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import osmgpxtool.gpxfilter.GpxFilter;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;

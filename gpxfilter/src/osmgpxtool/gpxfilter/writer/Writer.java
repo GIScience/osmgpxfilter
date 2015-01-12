@@ -1,10 +1,10 @@
 /**
  * 
  */
-package gpx_filter.writer;
+package osmgpxtool.gpxfilter.writer;
 
-import gpx_filter.gpx.schema.Gpx;
-import gpx_filter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx;
+import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
 
 public interface Writer {
 	

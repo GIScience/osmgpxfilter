@@ -6,12 +6,13 @@
 //
 
 
-package gpx_filter.gpx.schema;
+package osmgpxtool.gpxfilter.gpx.schema;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
@@ -20,12 +21,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
-import gpx_filter.gpx.schema.Gpx.Rte;
-import gpx_filter.gpx.schema.Gpx.Rte.Rtept;
-import gpx_filter.gpx.schema.Gpx.Trk;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg;
-import gpx_filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
-import gpx_filter.gpx.schema.Gpx.Wpt;
+
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Rte;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Wpt;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Rte.Rtept;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
 
 
 /**

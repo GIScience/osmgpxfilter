@@ -6,4 +6,4 @@
 //
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "http://www.topografix.com/GPX/1/0")
-package gpx_filter.gpx.schema;
+package osmgpxtool.gpxfilter.gpx.schema;

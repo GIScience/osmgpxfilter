@@ -6,11 +6,12 @@
 //
 
 
-package gpx_filter.metadata.schema;
+package osmgpxtool.gpxfilter.metadata.schema;
 
 import javax.xml.bind.annotation.XmlRegistry;
-import gpx_filter.metadata.schema.GpxFiles.GpxFile;
-import gpx_filter.metadata.schema.GpxFiles.GpxFile.Tags;
+
+import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile.Tags;
 
 
 /**
