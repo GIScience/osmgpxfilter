@@ -127,6 +127,7 @@ public class Main {
 	private static void parseArguments(String[] args) {
 		// read command line arguments
 		HelpFormatter helpFormater = new HelpFormatter();
+		helpFormater.setWidth(Integer.MAX_VALUE);
 		CommandLineParser cmdParser = new BasicParser();
 		cmdOptions = new Options();
 		setupArgumentOptions();
@@ -134,7 +135,7 @@ public class Main {
 		try {
 			cmd = cmdParser.parse(cmdOptions, args);
 			if (cmd.hasOption('h')) {
-				helpFormater.printHelp("GPX Filter", cmdOptions);
+				helpFormater.printHelp("GPX Filter", cmdOptions, true);
 				System.exit(0);
 			}
 			assignArguments(cmd);
@@ -152,27 +153,28 @@ public class Main {
 		cmdOptions.addOption(OptionBuilder.withLongOpt("input")
 				.withDescription("path to gpx-planet.tar.xz").hasArg()
 				.create("i"));
-		// option for bounding box
-		cmdOptions.addOption(OptionBuilder.withLongOpt("bounding-box")
-				.withDescription("specifies bounding box").hasArgs(4)
-				.withArgName("left=3.9> <right=4.5> <top=50.2> <bottom=50.0")
-				.withValueSeparator(' ').create("bbox"));
-		// filter option elevation
 		cmdOptions.addOption(new Option("e", "elevation", false,
 				"only use GPX-files if they have elevation information"));
 		cmdOptions
 				.addOption(new Option(
 						"c",
-						"Clip Bounding Box",
+						"Clip",
 						false,
 						"Clip GPS traces at bounding box. This option is only applied for PQSql and Shape output."));
-		// writer options
+		
+		// option for bounding box
+		cmdOptions.addOption(OptionBuilder.withLongOpt("bounding-box")
+				.withDescription("specifies bounding box").hasArgs(4)
+				.withArgName("left=x.x> <right=x.x> <top=x.x> <bottom=x.x")
+				.withValueSeparator(' ').create("bbox"));
+		// filter option elevation
+// writer options
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-shape")
 				.withDescription("path to output shape file").hasArg()
 				.withArgName("path to output shape file").create("ws"));
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-dump")
 				.withDescription("path to output dump file (gpx-planet.tar.xz")
-				.hasArg().create("wd"));
+				.hasArg().withArgName("path to output.tar.xz").create("wd"));
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-pqsql")
 				.withDescription("connection parameters for database")
 				.hasArgs(5).withArgName("db> <user> <password> <host> <port")
