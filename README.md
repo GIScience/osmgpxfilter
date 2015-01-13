@@ -1,6 +1,9 @@
 # osmgpxfilter
-osmgpxfilter is a tool to extract data from the [gpx-planet file](http://wiki.openstreetmap.org/wiki/Planet.gpx) or its regional extracts and export it as gpx planet-extract (tar.xz archive), to a Postgresql/PostGIS database or as ESRI shapefile.
-The data can be filtered by bounding box or by elevation attribute.
+osmgpxfilter is a tool to extract data from the [gpx-planet file](http://wiki.openstreetmap.org/wiki/Planet.gpx) or its [regional extracts](http://zverik.osm.rambler.ru/gps/files/extracts/index.html) and export using one of the following options:
+- (clipped) gpx planet-extract (tar.xz archive)
+- export Postgresql/PostGIS database (3D Points) 
+- export to as ESRI shapefile (Points)
+The data can be filtered by bounding box and/or by checking whether an elevation attribute is existing in the track
 
 ### Getting started
 
@@ -18,8 +21,10 @@ The data can be filtered by bounding box or by elevation attribute.
  -e,--elevation                                                                           only use GPX-files if they have elevation information
  -h,--help                                                                                displays help
  -i,--input                                                                               path to gpx-planet.tar.xz
- -wd,--write-dump <path to output.tar.xz>                                                 path to output dump file (gpx-planet.tar.xz
+ -wd,--write-dump <path to output.tar.xz>                                                 path to output dump file (gpx-planet.tar.xz)
  -wpg,--write-pqsql <db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432>   connection parameters for database
  -ws,--write-shape <path to output shape file>                                            path to output shape file
- 
+
  ```
+ 
+ Example java -jar osmgpxfilter-0.1.jar -bbox top=49.44 left=8.64 bottom=49.36 right=8.77 -c -e -i D:/osmgpx/baden-wuerttemberg.tar.xz -ws D:/osmgpx
