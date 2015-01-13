@@ -111,7 +111,7 @@ public class Main {
 				if (isGPX(tarEntry.getName())) {
 					p.increment();
 					int currentProgressPercent = (int)(Math.round(p.getProgressPercent()));
-					if (currentProgressPercent % 10 == 0 && currentProgressPercent != progressPercentPrinted) {
+					if (currentProgressPercent % 5 == 0 && currentProgressPercent != progressPercentPrinted) {
 						LOGGER.info(p.getProgressMessage());
 						progressPercentPrinted = currentProgressPercent;
 					}
