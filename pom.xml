@@ -23,7 +23,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>osmgpxtool.gpxfilter.Main</mainClass>
+							<mainClass>osmgpxtool.filter.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
