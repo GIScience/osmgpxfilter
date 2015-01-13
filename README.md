@@ -27,4 +27,18 @@ The data can be filtered by bounding box and/or by checking whether an elevation
 
  ```
  
- Example java -jar osmgpxfilter-0.1.jar -bbox top=49.44 left=8.64 bottom=49.36 right=8.77 -c -e -i D:/osmgpx/baden-wuerttemberg.tar.xz -ws D:/osmgpx
+ Example java -jar osmgpxfilter-0.1.jar -bbox top=49.459693 left=8.573179 bottom=49.352565 right=8.794050 -c -e -i D:/osmgpx/baden-wuerttemberg.tar.xz -ws D:/osmgpx/heidelberg.shp
+ 
+ 
+ /*|----------------------------------------------------------------------------------------------
+ *|														Heidelberg University
+ *|	  _____ _____  _____      _                     	Department of Geography		
+ *|	 / ____|_   _|/ ____|    (_)                    	Chair of GIScience
+ *|	| |  __  | | | (___   ___ _  ___ _ __   ___ ___ 	(C) 2014
+ *|	| | |_ | | |  \___ \ / __| |/ _ \ '_ \ / __/ _ \	
+ *|	| |__| |_| |_ ____) | (__| |  __/ | | | (_|  __/	Berliner Strasse 48								
+ *|	 \_____|_____|_____/ \___|_|\___|_| |_|\___\___|	D-69120 Heidelberg, Germany	
+ *|	        	                                       	http://www.giscience.uni-hd.de
+ *|								
+ *|----------------------------------------------------------------------------------------------*/
+ 
