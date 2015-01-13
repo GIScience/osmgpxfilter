@@ -1,7 +1,7 @@
 /**
  * 
  */
-package osmgpxtool.gpxfilter.writer;
+package osmgpxtool.filter.writer;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,10 +19,10 @@ import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.gpxfilter.GpxFilter;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx;
-import osmgpxtool.gpxfilter.metadata.schema.GpxFiles;
-import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.filter.GpxFilter;
+import osmgpxtool.filter.gpx.schema.Gpx;
+import osmgpxtool.filter.metadata.schema.GpxFiles;
+import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
 public class DumpWriter implements Writer {
 	static Logger LOGGER = LoggerFactory.getLogger(DumpWriter.class);

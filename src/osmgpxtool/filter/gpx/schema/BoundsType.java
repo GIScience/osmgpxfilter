@@ -6,7 +6,7 @@
 //
 
 
-package osmgpxtool.gpxfilter.gpx.schema;
+package osmgpxtool.filter.gpx.schema;
 
 import java.math.BigDecimal;
 import javax.xml.bind.annotation.XmlAccessType;

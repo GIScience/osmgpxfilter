@@ -6,7 +6,7 @@
 //
 
 
-package osmgpxtool.gpxfilter.metadata.schema;
+package osmgpxtool.filter.metadata.schema;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +19,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
-import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile.Tags;
+import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile.Tags;
 
 
 /**

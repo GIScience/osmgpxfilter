@@ -1,4 +1,4 @@
-package osmgpxtool.gpxfilter;
+package osmgpxtool.filter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -6,10 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.gpxfilter.gpx.schema.Gpx;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema.Gpx;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;

@@ -1,4 +1,4 @@
-package osmgpxtool.gpxfilter.writer;
+package osmgpxtool.filter.writer;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.gpxfilter.GpxFilter;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
-import osmgpxtool.gpxfilter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.filter.GpxFilter;
+import osmgpxtool.filter.gpx.schema.Gpx;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;

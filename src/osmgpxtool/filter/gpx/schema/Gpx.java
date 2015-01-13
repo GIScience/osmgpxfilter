@@ -6,7 +6,7 @@
 //
 
 
-package osmgpxtool.gpxfilter.gpx.schema;
+package osmgpxtool.filter.gpx.schema;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -22,12 +22,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Rte;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Wpt;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Rte.Rtept;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.gpxfilter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema.Gpx.Rte;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema.Gpx.Wpt;
+import osmgpxtool.filter.gpx.schema.Gpx.Rte.Rtept;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
 
 
 /**
