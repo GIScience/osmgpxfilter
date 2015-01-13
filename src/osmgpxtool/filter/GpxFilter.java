@@ -9,6 +9,7 @@
  *|	        	                                       	http://www.giscience.uni-hd.de
  *|								
  *|----------------------------------------------------------------------------------------------*/
+
 package osmgpxtool.filter;
 
 import java.math.BigDecimal;

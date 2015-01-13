@@ -49,6 +49,7 @@ import osmgpxtool.filter.writer.DumpWriter;
 import osmgpxtool.filter.writer.PGSqlWriter;
 import osmgpxtool.filter.writer.ShapeFileWriter;
 import osmgpxtool.filter.writer.Writer;
+import osmgpxtool.util.Progress;
 
 public class Main {
 	static Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -87,7 +88,7 @@ public class Main {
 				new CompressorStreamFactory().createCompressorInputStream(
 						CompressorStreamFactory.XZ, new BufferedInputStream(
 								new FileInputStream(tarFile))));
-		readMetadata();
+		int gpxFileListSize = readMetadata();
 
 		// init writer
 		if (cmd.hasOption("wd")) {
@@ -101,17 +102,26 @@ public class Main {
 		writer.init();
 
 		TarArchiveEntry tarEntry;
-		LOGGER.info("Start processing files...");
+		LOGGER.info("Start processing "+gpxFileListSize+" gpx files...");
+		Progress p = new Progress();
+		p.start(gpxFileListSize);
+		int progressPercentPrinted = -1;
 		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
 			if (tarEntry.isFile()) {
 				if (isGPX(tarEntry.getName())) {
+					p.increment();
+					int currentProgressPercent = (int)(Math.round(p.getProgressPercent()));
+					if (currentProgressPercent % 10 == 0 && currentProgressPercent != progressPercentPrinted) {
+						LOGGER.info(p.getProgressMessage());
+						progressPercentPrinted = currentProgressPercent;
+					}
 					byte[] content = new byte[(int) tarEntry.getSize()];
 					tarIn.read(content);
 					// write GPX file with specified writer
 					Gpx gpx = null;
 					try {
 						JAXBContext jc = JAXBContext
-								.newInstance("osmgpxtool.gpxfilter.gpx.schema");
+								.newInstance("osmgpxtool.filter.gpx.schema");
 						Unmarshaller unmarshaller = jc.createUnmarshaller();
 						JAXBElement<Gpx> root = (JAXBElement<Gpx>) unmarshaller
 								.unmarshal(new StreamSource(
@@ -342,7 +352,10 @@ public class Main {
 		return true;
 	}
 
-	private static void readMetadata() throws IOException, CompressorException {
+	private static int readMetadata() throws IOException, CompressorException {
+		
+		int gpxFileListSize = 0;
+		
 		// initialize reader
 		TarArchiveInputStream tarIn = new TarArchiveInputStream(
 				new CompressorStreamFactory().createCompressorInputStream(
@@ -353,13 +366,13 @@ public class Main {
 		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
 			if (isMetaXML(tarEntry.getName())) {
 				metadataFilename = tarEntry.getName();
-				LOGGER.info("Save metadata to memory...");
+				// LOGGER.info("Parsing metadata...");
 				byte[] content = new byte[(int) tarEntry.getSize()];
 				tarIn.read(content);
 				// parse metadata file
 				try {
 					JAXBContext jc = JAXBContext
-							.newInstance("osmgpxtool.gpxfilter.metadata.schema");
+							.newInstance("osmgpxtool.filter.metadata.schema");
 					Unmarshaller unmarshaller = jc.createUnmarshaller();
 					JAXBElement<GpxFiles> root = (JAXBElement<GpxFiles>) unmarshaller
 							.unmarshal(new StreamSource(
@@ -368,6 +381,8 @@ public class Main {
 					GpxFiles gpxFiles = root.getValue();
 					metadata = new TreeMap<Integer, GpxFile>();
 					List<GpxFile> gpxFileList = gpxFiles.getGpxFile();
+					gpxFileListSize = gpxFileList.size();
+					LOGGER.info("Parsing "+gpxFileList.size()+" metadata entries...");
 					for (int w = 0; w < gpxFileList.size(); w++) {
 						GpxFile meta = gpxFileList.get(w);
 						metadata.put(meta.getId(), meta);
@@ -380,8 +395,9 @@ public class Main {
 
 		}
 		tarIn.close();
-		LOGGER.info("Metadata successfully parsed. Number of Gpx-Files: "
+		LOGGER.info("Metadata successfully parsed. Total number of Gpx-Files in gpx archive: "
 				+ metadata.size());
+		return gpxFileListSize;
 	}
 
 	private static int getGpxId(TarArchiveEntry tarEntry) {
