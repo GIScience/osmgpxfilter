@@ -85,7 +85,7 @@ public class DumpWriter implements Writer {
 	@Override
 	public void write(Gpx gpx, String filename, GpxFile metadata) {
 		if (metadata == null) {
-			LOGGER.error("Couldn't find metadata for file: " + filename);
+			LOGGER.warn("Skipped because of missing metadata: "+ filename);
 		} else {
 			if (filter.check(gpx)) {
 				metadataFile.getGpxFile().add(metadata);

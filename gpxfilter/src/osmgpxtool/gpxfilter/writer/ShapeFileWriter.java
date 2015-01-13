@@ -124,7 +124,7 @@ public class ShapeFileWriter implements Writer {
 	@Override
 	public void write(Gpx gpx, String filename, GpxFile metadata) {
 		if (metadata == null) {
-			LOGGER.error("Couldn't find metadata for file: " + filename);
+			LOGGER.warn("Skipped because of missing metadata: "+ filename);
 		} else {
 			if (filter.check(gpx)) {
 
@@ -163,10 +163,7 @@ public class ShapeFileWriter implements Writer {
 			// loop through track segements
 			for (int trkseg_id = 0; trkseg_id < trk.getTrkseg().size(); trkseg_id++) {
 				Trkseg seg = trk.getTrkseg().get(trkseg_id);
-				/*
-				 * each tracksegment needs at least 2 trackpoints, therefore
-				 * skip tracksegments having only one trackpoint
-				 */
+
 				// loop through trackpoints
 				for (int trkpt_id = 0; trkpt_id < seg.getTrkpt().size(); trkpt_id++) {
 					Trkpt trkpt = seg.getTrkpt().get(trkpt_id);

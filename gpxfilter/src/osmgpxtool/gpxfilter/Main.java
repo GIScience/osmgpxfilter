@@ -5,6 +5,7 @@ package osmgpxtool.gpxfilter;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -64,6 +65,8 @@ public class Main {
 
 	public static void main(String[] args) throws CompressorException,
 			IOException {
+		long tStart= System.currentTimeMillis();
+
 		parseArguments(args);
 
 		// init Filter
@@ -89,8 +92,7 @@ public class Main {
 		writer.init();
 
 		TarArchiveEntry tarEntry;
-		int processed = 0;
-
+		LOGGER.info("Start processing files...");
 		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
 			if (tarEntry.isFile()) {
 				if (isGPX(tarEntry.getName())) {
@@ -121,7 +123,8 @@ public class Main {
 		tarIn.close();
 		writer.close();
 		filter.printStats();
-		LOGGER.info("Filter task done...");
+		long executionTime= (System.currentTimeMillis() - tStart)/1000; //time in seconds
+		LOGGER.info("Filter task done... Execution time: "+executionTime+" seconds");
 	}
 
 	private static void parseArguments(String[] args) {
@@ -161,67 +164,107 @@ public class Main {
 						"Clip",
 						false,
 						"Clip GPS traces at bounding box. This option is only applied for PQSql and Shape output."));
-		
+
 		// option for bounding box
 		cmdOptions.addOption(OptionBuilder.withLongOpt("bounding-box")
 				.withDescription("specifies bounding box").hasArgs(4)
 				.withArgName("left=x.x> <right=x.x> <top=x.x> <bottom=x.x")
 				.withValueSeparator(' ').create("bbox"));
 		// filter option elevation
-// writer options
+		// writer options
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-shape")
 				.withDescription("path to output shape file").hasArg()
 				.withArgName("path to output shape file").create("ws"));
 		cmdOptions.addOption(OptionBuilder.withLongOpt("write-dump")
 				.withDescription("path to output dump file (gpx-planet.tar.xz")
 				.hasArg().withArgName("path to output.tar.xz").create("wd"));
-		cmdOptions.addOption(OptionBuilder.withLongOpt("write-pqsql")
-				.withDescription("connection parameters for database")
-				.hasArgs(5).withArgName("db> <user> <password> <host> <port")
-				.withValueSeparator(' ').create("wpg"));
+		cmdOptions
+				.addOption(OptionBuilder
+						.withLongOpt("write-pqsql")
+						.withDescription("connection parameters for database")
+						.hasArgs(5)
+						.withArgName(
+								"db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432")
+						.withValueSeparator(' ').create("wpg"));
 	}
 
 	private static void assignArguments(CommandLine cmd) throws ParseException {
 		// assign values to variables
-		tarFile = cmd.getOptionValue("i");
+
+		if (cmd.getOptionValue("i") != null
+				&& new File(cmd.getOptionValue("i")).exists()) {
+			tarFile = cmd.getOptionValue("i");
+		} else {
+			throw new ParseException(
+					"No input file given or it doesn't exist. Check \"-h\" for help ");
+		}
 		elevationOnly = cmd.hasOption("e");
 		bboxClip = cmd.hasOption("c");
 		outputFileDump = cmd.getOptionValue("wd");
+
 		outputFileShape = cmd.getOptionValue("ws");
 
 		// parse boundingbox attribute
 		if (cmd.hasOption("bbox")) {
-			HashMap<String, Double> bboxMap = new HashMap<String, Double>();
-			for (String n : cmd.getOptionValues("bbox")) {
-				bboxMap.put(n.split("=")[0], Double.valueOf(n.split("=")[1]));
-			}
-			if (checkBbox(bboxMap)) {
-				bboxLeft = bboxMap.get("left");
-				bboxRight = bboxMap.get("right");
-				bboxBottom = bboxMap.get("bottom");
-				bboxTop = bboxMap.get("top");
+			if (cmd.getOptionValues("bbox").length == 4) {
+				HashMap<String, Double> bboxMap = new HashMap<String, Double>();
+				try {
+					for (String n : cmd.getOptionValues("bbox")) {
+						bboxMap.put(n.split("=")[0],
+								Double.valueOf(n.split("=")[1]));
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					throw new ParseException(
+							"Bounding box arguments not valid. Did you use \"=\" to seperate key and value? Check \"-h\" for help ");
+				}
+				if (checkBbox(bboxMap)) {
+					bboxLeft = bboxMap.get("left");
+					bboxRight = bboxMap.get("right");
+					bboxBottom = bboxMap.get("bottom");
+					bboxTop = bboxMap.get("top");
+				} else {
+					throw new ParseException(
+							"Bounding Box arguments not valid. Check \"-h\" for help ");
+				}
 			} else {
 				throw new ParseException(
-						"Bounding Box arguments not valid. Check \"-h\" for help ");
+						"Bounding Box arguments not valid. Wrong number of arguments: "
+								+ cmd.getOptionValues("bbox").length
+								+ " Check \"-h\" for help ");
 			}
+
 		}
 
 		// parse database attributes
 		if (cmd.hasOption("wpg")) {
-			HashMap<String, String> dbMap = new HashMap<String, String>();
-			for (String n : cmd.getOptionValues("wpg")) {
-				dbMap.put(n.split("=")[0], n.split("=")[1]);
-			}
-			if (checkDbParamaters(dbMap)) {
-				dbName = dbMap.get("db");
-				dbUser = dbMap.get("user");
-				dbPassword = dbMap.get("password");
-				dbHost = dbMap.get("host");
-				dbPort = dbMap.get("port");
+			if (cmd.getOptionValues("wpg").length == 5) {
+
+				HashMap<String, String> dbMap = new HashMap<String, String>();
+				try {
+					for (String n : cmd.getOptionValues("wpg")) {
+						dbMap.put(n.split("=")[0], n.split("=")[1]);
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					throw new ParseException(
+							"Database arguments not valid. Did you use \"=\" to seperate key and value? Check \"-h\" for help ");
+				}
+				if (checkDbParamaters(dbMap)) {
+					dbName = dbMap.get("db");
+					dbUser = dbMap.get("user");
+					dbPassword = dbMap.get("password");
+					dbHost = dbMap.get("host");
+					dbPort = dbMap.get("port");
+				} else {
+					throw new ParseException(
+							"Database arguments not valid. Check \"-h\" for help ");
+				}
 			} else {
 				throw new ParseException(
-						"Database arguments not valid. Check \"-h\" for help ");
+						"Database arguments not valid.  Wrong number of arguments: "
+								+ cmd.getOptionValues("bbox").length
+								+ " Check \"-h\" for help ");
 			}
+
 		}
 	}
 
