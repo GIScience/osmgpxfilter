@@ -25,9 +25,10 @@ The data can be filtered by bounding box and/or by checking whether an elevation
  -wpg,--write-pqsql <db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432>   connection parameters for database
  -ws,--write-shape <path to output shape file>                                            path to output shape file
 
+
+Example java -jar osmgpxfilter-0.1.jar -bbox top=49.459693 left=8.573179 bottom=49.352565 right=8.794050 -c -e -i D:/osmgpx/baden-wuerttemberg.tar.xz -ws D:/osmgpx/heidelberg.shp
+
  ```
- 
- `Example java -jar osmgpxfilter-0.1.jar -bbox top=49.459693 left=8.573179 bottom=49.352565 right=8.794050 -c -e -i D:/osmgpx/baden-wuerttemberg.tar.xz -ws D:/osmgpx/heidelberg.shp`
  
  ```
  /*|----------------------------------------------------------------------------------------------
