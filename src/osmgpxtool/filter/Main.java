@@ -50,6 +50,7 @@ import osmgpxtool.filter.writer.PGSqlWriter;
 import osmgpxtool.filter.writer.ShapeFileWriter;
 import osmgpxtool.filter.writer.Writer;
 import osmgpxtool.util.Progress;
+import osmgpxtool.util.TimeTools;
 
 public class Main {
 	static Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -143,7 +144,7 @@ public class Main {
 		writer.close();
 		filter.printStats();
 		long executionTime= (System.currentTimeMillis() - tStart)/1000; //time in seconds
-		LOGGER.info("Filter task done... Execution time: "+executionTime+" seconds");
+		LOGGER.info("Filter task done... Execution time: "+executionTime+" seconds ("+TimeTools.convertMillisToHourMinuteSecond(executionTime)+")");
 	}
 
 	private static void parseArguments(String[] args) {
