@@ -97,7 +97,7 @@ public class PGSqlWriter implements Writer {
 		Statement create = null;
 		try {
 			create = con.createStatement();
-			create.addBatch("DROP TABLE IF EXISTS gpx_info;");
+			create.addBatch("DROP TABLE IF EXISTS gpx_info cascade;");
 			create.addBatch("CREATE TABLE gpx_info(\"gpx_id\" integer CONSTRAINT \"gpx_info_id\" PRIMARY KEY,\"tags\" text[],\"points\" integer,\"uid\" integer,\"user\" text,\"visibility\" text,\"description\" text);");
 			create.addBatch("DROP TABLE IF EXISTS gpx_data;");
 			create.addBatch("CREATE TABLE gpx_data(\"gpx_id\" integer references gpx_info(gpx_id),\"trk_id\" integer,\"trkseg_id\" integer,\"trkpt_id\" integer,\"timestamp\" text,geom geometry(PointZ,4326),PRIMARY KEY(gpx_id, trk_id, trkseg_id, trkpt_id));");

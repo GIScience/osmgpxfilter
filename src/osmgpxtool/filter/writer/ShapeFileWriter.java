@@ -127,6 +127,7 @@ public class ShapeFileWriter implements Writer {
 			LOGGER.warn("Skipped because of missing metadata: "+ filename);
 		} else {
 			if (filter.check(gpx)) {
+				
 
 				List<SimpleFeature> featureList = gpxToFeatureList(gpx,
 						metadata.getId());
