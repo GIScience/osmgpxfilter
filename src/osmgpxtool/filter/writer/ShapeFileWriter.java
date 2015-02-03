@@ -141,7 +141,7 @@ public class ShapeFileWriter implements Writer {
 					featureStore.addFeatures(collection);
 
 					// save features to file
-					transaction.commit();
+					//transaction.commit();
 				} catch (IOException e) {
 					LOGGER.error("Error while writing to shapefile. Last transaction is beeing rolled back.");
 					try {
@@ -222,6 +222,7 @@ public class ShapeFileWriter implements Writer {
 	public void close() {
 		try {
 			if (transaction != null) {
+				transaction.commit();
 				transaction.close();
 			}
 		} catch (IOException e) {

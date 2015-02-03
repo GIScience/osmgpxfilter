@@ -144,18 +144,30 @@ public class GpxFilter {
 	 */
 	private boolean hasElevationAttribute(Gpx gpx) {
 		List<Trk> trkList = gpx.getTrk();
+		boolean allEqual = true;
 		for (Trk trk : trkList) {
 			for (Trkseg trkseg : trk.getTrkseg()) {
+				BigDecimal firstEle = trkseg.getTrkpt().get(0).getEle();
 				for (Trkpt trkpt : trkseg.getTrkpt()) {
 					BigDecimal ele = trkpt.getEle();
+					if (ele!=firstEle){
+						allEqual=false;
+					}
 					if (ele == null) {
 						rejectedEle++;
 						return false;
-					}
+					}			
 				}
 			}
 		}
-		return true;
+		
+		if (allEqual==true){
+			//elevation value is the same for all trackpoints
+			LOGGER.warn("elevation value is the same for all trackpoints. Track will be skipped.");
+			return false;
+		}else{
+			return true;
+		}
 	}
 
 	/**
