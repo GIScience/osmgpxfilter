@@ -46,6 +46,7 @@ import osmgpxtool.filter.gpx.schema.Gpx;
 import osmgpxtool.filter.metadata.schema.GpxFiles;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 import osmgpxtool.filter.writer.DumpWriter;
+import osmgpxtool.filter.writer.PGSqlMultilineWriter;
 import osmgpxtool.filter.writer.PGSqlWriter;
 import osmgpxtool.filter.writer.ShapeFileWriter;
 import osmgpxtool.filter.writer.Writer;
@@ -60,6 +61,7 @@ public class Main {
 	private static String dbName;
 	private static String dbPassword;
 	private static String dbUser;
+	private static String dbGeometry;
 	private static String outputFileDump;
 	private static String outputFileShape;
 	private static boolean elevationOnly;
@@ -89,14 +91,19 @@ public class Main {
 				new CompressorStreamFactory().createCompressorInputStream(
 						CompressorStreamFactory.XZ, new BufferedInputStream(
 								new FileInputStream(tarFile))));
-		int gpxFileListSize = readMetadata();
+int gpxFileListSize = readMetadata();
 
 		// init writer
 		if (cmd.hasOption("wd")) {
 			writer = new DumpWriter(filter, outputFileDump, metadataFilename);
 		} else if (cmd.hasOption("wpg")) {
-			writer = new PGSqlWriter(filter, dbName, dbUser, dbPassword,
-					dbHost, dbPort);
+			if (dbGeometry.equals("point")){
+				writer = new PGSqlWriter(filter, dbName, dbUser, dbPassword,
+						dbHost, dbPort);
+			}else if (dbGeometry.equals("linestring")){
+				writer = new PGSqlMultilineWriter(filter, dbName, dbUser, dbPassword, dbHost, dbPort);
+			}
+		
 		} else if (cmd.hasOption("ws")) {
 			writer = new ShapeFileWriter(outputFileShape, filter);
 		}
@@ -201,10 +208,10 @@ public class Main {
 		cmdOptions
 				.addOption(OptionBuilder
 						.withLongOpt("write-pqsql")
-						.withDescription("connection parameters for database")
-						.hasArgs(5)
+						.withDescription("connection parameters for database. Supported Geometry: ")
+						.hasArgs(6)
 						.withArgName(
-								"db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432")
+								"db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432> <geometry=[linestring,point]")
 						.withValueSeparator(' ').create("wpg"));
 	}
 
@@ -257,7 +264,7 @@ public class Main {
 
 		// parse database attributes
 		if (cmd.hasOption("wpg")) {
-			if (cmd.getOptionValues("wpg").length == 5) {
+			if (cmd.getOptionValues("wpg").length == 6) {
 
 				HashMap<String, String> dbMap = new HashMap<String, String>();
 				try {
@@ -274,6 +281,7 @@ public class Main {
 					dbPassword = dbMap.get("password");
 					dbHost = dbMap.get("host");
 					dbPort = dbMap.get("port");
+					dbGeometry = dbMap.get("geometry");
 				} else {
 					throw new ParseException(
 							"Database arguments not valid. Check \"-h\" for help ");
@@ -281,7 +289,7 @@ public class Main {
 			} else {
 				throw new ParseException(
 						"Database arguments not valid.  Wrong number of arguments: "
-								+ cmd.getOptionValues("bbox").length
+								+ cmd.getOptionValues("wpg").length
 								+ " Check \"-h\" for help ");
 			}
 
@@ -306,6 +314,15 @@ public class Main {
 			return false;
 		}
 		if (!dbMap.containsKey("password")) {
+			LOGGER.error("Database parameter missing: password");
+			return false;
+		}
+		if (dbMap.containsKey("geometry")) {
+			if (!dbMap.get("geometry").equals("linestring") && !dbMap.get("geometry").equals("point")){
+				LOGGER.error("Wrong Database parameter: supported geometry types: \"linestring\" and \"point\"");
+				return false;
+			}
+		}else{
 			LOGGER.error("Database parameter missing: password");
 			return false;
 		}

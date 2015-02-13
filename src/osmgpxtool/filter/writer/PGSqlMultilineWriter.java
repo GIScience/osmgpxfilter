@@ -32,7 +32,7 @@ import com.vividsolutions.jts.io.WKBWriter;
  * MultiLineString. It is kept in case it needed at later stage.
  *
  */
-@Deprecated
+
 public class PGSqlMultilineWriter implements Writer {
 	static Logger LOGGER = LoggerFactory.getLogger(PGSqlMultilineWriter.class);
 
@@ -82,7 +82,7 @@ public class PGSqlMultilineWriter implements Writer {
 		// prepare insert statement
 		try {
 			insert = con
-					.prepareStatement("INSERT INTO gpx_planet(gpx_id,tags,points,uid,\"user\",visibility,description,geom) VALUES(?,?,?,?,?,?,?,ST_GeomFromEWKB(?))");
+					.prepareStatement("INSERT INTO gpx_data_line(gpx_id,tags,points,uid,\"user\",visibility,description,geom) VALUES(?,?,?,?,?,?,?,ST_GeomFromEWKB(?))");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException();
@@ -97,10 +97,10 @@ public class PGSqlMultilineWriter implements Writer {
 		Statement create = null;
 		try {
 			create = con.createStatement();
-			create.addBatch("DROP TABLE IF EXISTS gpx_planet;");
-			create.addBatch("CREATE TABLE gpx_planet(\"gpx_id\" integer CONSTRAINT \"gpx_id\" PRIMARY KEY,\"tags\" text[],\"points\" integer,\"uid\" integer,\"user\" text,\"visibility\" text,\"description\" text,\"geom\" geometry(MultiLineStringZ,4326));");
-			create.addBatch("DROP INDEX IF EXISTS planet_gpx_geom_index;");
-			create.addBatch("CREATE INDEX planet_gpx_geom_index ON gpx_planet USING gist (geom);");
+			create.addBatch("DROP TABLE IF EXISTS gpx_data_line;");
+			create.addBatch("CREATE TABLE gpx_data_line(\"gpx_id\" integer CONSTRAINT \"gpx_id\" PRIMARY KEY,\"tags\" text[],\"points\" integer,\"uid\" integer,\"user\" text,\"visibility\" text,\"description\" text,\"geom\" geometry(MultiLineStringZ,4326));");
+			create.addBatch("DROP INDEX IF EXISTS gpx_data_line_geom_index;");
+			create.addBatch("CREATE INDEX gpx_data_line_geom_index ON gpx_data_line USING gist (geom);");
 			create.executeBatch();
 			create.close();
 		} catch (SQLException e) {
