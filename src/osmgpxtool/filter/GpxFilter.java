@@ -13,12 +13,10 @@
 package osmgpxtool.filter;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.filter.gpx.schema.Gpx;
 import osmgpxtool.filter.gpx.schema.Gpx.Trk;
 import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
 import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
@@ -37,12 +35,13 @@ public class GpxFilter {
 	private boolean bboxClip;
 	private boolean elevationOnly;
 	private int rejectedEle;
+	private int equalEle;
 	private int rejectedBbox;
 	private int rejected;
 	private int passed;
 
-	public GpxFilter(Double bboxLeft, Double bboxRight, Double bboxBottom,
-			Double bboxTop, boolean bboxClip, boolean elevationOnly) {
+	public GpxFilter(Double bboxLeft, Double bboxRight, Double bboxBottom, Double bboxTop, boolean bboxClip,
+			boolean elevationOnly) {
 
 		super();
 		this.bboxLeft = bboxLeft;
@@ -51,8 +50,7 @@ public class GpxFilter {
 		this.bboxTop = bboxTop;
 		this.elevationOnly = elevationOnly;
 		this.bboxClip = bboxClip;
-		if (bboxLeft != null && bboxRight != null && bboxTop != null
-				&& bboxBottom != null) {
+		if (bboxLeft != null && bboxRight != null && bboxTop != null && bboxBottom != null) {
 			this.env = new Envelope(bboxLeft, bboxRight, bboxTop, bboxBottom);
 		} else {
 			this.env = null;
@@ -62,10 +60,9 @@ public class GpxFilter {
 
 	private void printArgs() {
 		LOGGER.info("Filter set with following Arguments:");
-		if (bboxLeft != null && bboxRight != null && bboxTop != null
-				&& bboxBottom != null) {
-			LOGGER.info("Bounding Box: left=" + bboxLeft + " right="
-					+ bboxRight + " top=" + bboxTop + " bottom=" + bboxBottom);
+		if (bboxLeft != null && bboxRight != null && bboxTop != null && bboxBottom != null) {
+			LOGGER.info("Bounding Box: left=" + bboxLeft + " right=" + bboxRight + " top=" + bboxTop + " bottom="
+					+ bboxBottom);
 			if (bboxClip == true) {
 				LOGGER.info("Data will be clipped at bounding box");
 			}
@@ -89,14 +86,13 @@ public class GpxFilter {
 	 * @return
 	 */
 
-	public boolean check(Gpx gpx) {
+	public boolean check(Trk trk) {
 		boolean isInBbox = false;
 		boolean hasEle = false;
 
-		if (bboxLeft != null && bboxBottom != null && bboxTop != null
-				&& bboxRight != null) {
+		if (bboxLeft != null && bboxBottom != null && bboxTop != null && bboxRight != null) {
 			// bounding box is set
-			isInBbox = isInBoundingBox(gpx);
+			isInBbox = isInBoundingBox(trk);
 		} else {
 			isInBbox = true;
 		}
@@ -104,7 +100,7 @@ public class GpxFilter {
 		if (elevationOnly == true) {
 			// elevationOnly is set. check if trackpoints have elevation
 			// attribute
-			hasEle = hasElevationAttribute(gpx);
+			hasEle = hasElevationAttribute(trk);
 		} else {
 			hasEle = true;
 		}
@@ -142,31 +138,36 @@ public class GpxFilter {
 	 * @param gpx
 	 * @return
 	 */
-	private boolean hasElevationAttribute(Gpx gpx) {
-		List<Trk> trkList = gpx.getTrk();
+	private boolean hasElevationAttribute(Trk trk) {
+
 		boolean allEqual = true;
-		for (Trk trk : trkList) {
-			for (Trkseg trkseg : trk.getTrkseg()) {
+
+		for (Trkseg trkseg : trk.getTrkseg()) {
+			if (trkseg.getTrkpt().size() > 1) {
 				BigDecimal firstEle = trkseg.getTrkpt().get(0).getEle();
 				for (Trkpt trkpt : trkseg.getTrkpt()) {
 					BigDecimal ele = trkpt.getEle();
-					if (ele!=firstEle){
-						allEqual=false;
+					if (ele != firstEle) {
+						allEqual = false;
 					}
 					if (ele == null) {
 						rejectedEle++;
 						return false;
-					}			
+					}
 				}
+			}else{
+				allEqual=false;
 			}
 		}
-		
-		if (allEqual==true){
-			//elevation value is the same for all trackpoints
-			LOGGER.warn("elevation value is the same for all trackpoints. Track will be skipped.");
-			return false;
-		}else{
+
+		if (allEqual == false) {
 			return true;
+		} else {
+			// elevation value is the same for all trackpoints
+			// LOGGER.warn("elevation value is the same for all trackpoints. Track will be skipped.");
+			equalEle++;
+			return false;
+			
 		}
 	}
 
@@ -174,22 +175,18 @@ public class GpxFilter {
 	 * checks whether a Gps-trace is within the specified bounding box. It
 	 * returns true, when at least one point intersects the bounding box.
 	 * 
-	 * @param gpx
+	 * @param trk
 	 * @return
 	 */
-	private boolean isInBoundingBox(Gpx gpx) {
+	private boolean isInBoundingBox(Trk trk) {
 
-		List<Trk> trkList = gpx.getTrk();
-		for (Trk trk : trkList) {
-			for (Trkseg trkseg : trk.getTrkseg()) {
-				for (Trkpt trkpt : trkseg.getTrkpt()) {
-					BigDecimal lon = trkpt.getLon();
-					BigDecimal lat = trkpt.getLat();
-					Coordinate c = new Coordinate(lon.doubleValue(),
-							lat.doubleValue());
-					if (env.contains(c)) {
-						return true;
-					}
+		for (Trkseg trkseg : trk.getTrkseg()) {
+			for (Trkpt trkpt : trkseg.getTrkpt()) {
+				BigDecimal lon = trkpt.getLon();
+				BigDecimal lat = trkpt.getLat();
+				Coordinate c = new Coordinate(lon.doubleValue(), lat.doubleValue());
+				if (env.contains(c)) {
+					return true;
 				}
 			}
 		}
@@ -200,10 +197,11 @@ public class GpxFilter {
 	}
 
 	public void printStats() {
-		LOGGER.info("Gpx Files passed filter: " + passed);
-		LOGGER.info("Gpx Files rejected: " + rejected);
-		LOGGER.info("Gpx Files not in Bbox: " + rejectedBbox);
-		LOGGER.info("Gpx Files no elevation attribute: " + rejectedEle);
+		LOGGER.info("Gpx traces passed filter: " + passed);
+		LOGGER.info("Gpx traces rejected: " + rejected);
+		LOGGER.info("Gpx traces not in Bbox: " + rejectedBbox);
+		LOGGER.info("Gpx traces no elevation attribute: " + rejectedEle);
+		LOGGER.info("Gpx traces with equal elevation: " + equalEle);
 	}
 
 	public boolean isElevationOnly() {
