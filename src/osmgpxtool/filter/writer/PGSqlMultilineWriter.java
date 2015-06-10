@@ -32,7 +32,7 @@ import com.vividsolutions.jts.io.WKBWriter;
  * MultiLineString. It is kept in case it needed at later stage.
  *
  */
-@Deprecated
+
 public class PGSqlMultilineWriter implements Writer {
 	static Logger LOGGER = LoggerFactory.getLogger(PGSqlMultilineWriter.class);
 
@@ -56,8 +56,8 @@ public class PGSqlMultilineWriter implements Writer {
 	 * @param dbHost
 	 * @param dbPort
 	 */
-	public PGSqlMultilineWriter(GpxFilter filter, String dbName, String dbUser,
-			String dbPassword, String dbHost, String dbPort) {
+	public PGSqlMultilineWriter(GpxFilter filter, String dbName, String dbUser, String dbPassword, String dbHost,
+			String dbPort) {
 		super();
 		this.dbName = dbName;
 		this.dbUser = dbUser;
@@ -73,8 +73,7 @@ public class PGSqlMultilineWriter implements Writer {
 	 */
 	@Override
 	public void init() {
-		LOGGER.info("connect to database: " + dbName + ", " + dbHost + ":"
-				+ dbPort + " with user: " + dbUser);
+		LOGGER.info("connect to database: " + dbName + ", " + dbHost + ":" + dbPort + " with user: " + dbUser);
 		connectToDatabase();
 		LOGGER.info("Connection successful!");
 		createTable();
@@ -82,7 +81,7 @@ public class PGSqlMultilineWriter implements Writer {
 		// prepare insert statement
 		try {
 			insert = con
-					.prepareStatement("INSERT INTO gpx_planet(gpx_id,tags,points,uid,\"user\",visibility,description,geom) VALUES(?,?,?,?,?,?,?,ST_GeomFromEWKB(?))");
+					.prepareStatement("INSERT INTO gpx_data_line(gpx_id, trk_id, tags,points,uid,\"user\",visibility,description,geom) VALUES(?,?,?,?,?,?,?,?,ST_GeomFromEWKB(?))");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException();
@@ -97,10 +96,10 @@ public class PGSqlMultilineWriter implements Writer {
 		Statement create = null;
 		try {
 			create = con.createStatement();
-			create.addBatch("DROP TABLE IF EXISTS gpx_planet;");
-			create.addBatch("CREATE TABLE gpx_planet(\"gpx_id\" integer CONSTRAINT \"gpx_id\" PRIMARY KEY,\"tags\" text[],\"points\" integer,\"uid\" integer,\"user\" text,\"visibility\" text,\"description\" text,\"geom\" geometry(MultiLineStringZ,4326));");
-			create.addBatch("DROP INDEX IF EXISTS planet_gpx_geom_index;");
-			create.addBatch("CREATE INDEX planet_gpx_geom_index ON gpx_planet USING gist (geom);");
+			create.addBatch("DROP TABLE IF EXISTS gpx_data_line;");
+			create.addBatch("CREATE TABLE gpx_data_line(\"gpx_id\" int, \"trk_id\" int ,\"tags\" text[],\"points\" integer,\"uid\" integer,\"user\" text,\"visibility\" text,\"description\" text,\"geom\" geometry(MultiLineStringZ,4326),CONSTRAINT gpx_data_line_pk PRIMARY KEY (gpx_id, trk_id));");
+			create.addBatch("DROP INDEX IF EXISTS gpx_data_line_geom_index;");
+			create.addBatch("CREATE INDEX gpx_data_line_geom_index ON gpx_data_line USING gist (geom);");
 			create.executeBatch();
 			create.close();
 		} catch (SQLException e) {
@@ -136,45 +135,54 @@ public class PGSqlMultilineWriter implements Writer {
 	public void write(Gpx gpx, String filename, GpxFile metadata) {
 		if (metadata == null) {
 			LOGGER.warn("Skipped because of missing metadata: " + filename);
-		} else if (filter.check(gpx)) {
-			// prepare geometry
-			MultiLineString geom = prepareGeometry(gpx);
-			if (geom != null) {
-				WKBWriter wr = new WKBWriter(3, true);
-				try {
-					insert.clearParameters();
-					insert.setInt(1, metadata.getId());
-					if (metadata.getTags() != null) {
-						insert.setArray(
-								2,
-								con.createArrayOf("text", metadata.getTags()
-										.getTag().toArray()));
-					} else {
-						insert.setNull(2, java.sql.Types.ARRAY);
+		} else {
+			// for each track in gpx
+			for (int i = 0; i < gpx.getTrk().size(); i++) {
+				Trk trk = gpx.getTrk().get(i);
+				//LOGGER.info("gpx_id: "+metadata.getId() + " trk_id: " + i +" userid: "+ metadata.getUser());
+				if (filter.check(trk)) {
+					if (trk.getTrkseg().size()>1){
+						LOGGER.info("Track has more than one segment.");
+						LOGGER.info("gpx_id: "+metadata.getId() + " trk_id: " + i +" userid: "+ metadata.getUser());
 					}
-					insert.setInt(3, metadata.getPoints());
-					if (metadata.getUid() != null) {
-						insert.setInt(4, metadata.getUid());
-					} else {
-						insert.setNull(4, java.sql.Types.INTEGER);
-					}
-					insert.setString(5, metadata.getUser());
-					insert.setString(6, metadata.getVisibility());
-					if (metadata.getDescription() != null) {
-						insert.setString(7, metadata.getDescription());
-					} else {
-						insert.setNull(7, java.sql.Types.VARCHAR);
-					}
-					insert.setObject(8, wr.write(geom), java.sql.Types.BINARY);
+					// prepare geometry
+					MultiLineString geom = prepareGeometry(trk);
+					if (geom != null) {
+						WKBWriter wr = new WKBWriter(3, true);
+						try {
+							insert.clearParameters();
+							insert.setInt(1, metadata.getId());
+							insert.setInt(2,i);
+							if (metadata.getTags() != null) {
+								insert.setArray(3, con.createArrayOf("text", metadata.getTags().getTag().toArray()));
+							} else {
+								insert.setNull(3, java.sql.Types.ARRAY);
+							}
+							insert.setInt(4, metadata.getPoints());
+							if (metadata.getUid() != null) {
+								insert.setInt(5, metadata.getUid());
+							} else {
+								insert.setNull(5, java.sql.Types.INTEGER);
+							}
+							insert.setString(6, metadata.getUser());
+							insert.setString(7, metadata.getVisibility());
+							if (metadata.getDescription() != null) {
+								insert.setString(8, metadata.getDescription());
+							} else {
+								insert.setNull(8, java.sql.Types.VARCHAR);
+							}
+							insert.setObject(9, wr.write(geom), java.sql.Types.BINARY);
 
-					insert.executeUpdate();
-					// LOGGER.info("insert: " + metadata.getId());
+							insert.executeUpdate();
+							// LOGGER.info("insert: " + metadata.getId());
 
-				} catch (SQLException e) {
-					e.printStackTrace();
-					System.exit(1);
+						} catch (SQLException e) {
+							e.printStackTrace();
+							System.exit(1);
+						}
+
+					}
 				}
-
 			}
 		}
 	}
@@ -186,56 +194,48 @@ public class PGSqlMultilineWriter implements Writer {
 	 * @param gpx
 	 * @returns null, if MultiLineString is empty
 	 */
-	private MultiLineString prepareGeometry(Gpx gpx) {
+	private MultiLineString prepareGeometry(Trk trk) {
 		GeometryFactory geomF = new GeometryFactory(new PrecisionModel(), 4326);
 		ArrayList<LineString> linestrings = new ArrayList<LineString>();
 
-		// loop through tracks
-		for (int a = 0; a < gpx.getTrk().size(); a++) {
-			Trk trk = gpx.getTrk().get(a);
-			// loop through track segements
-			for (int i = 0; i < trk.getTrkseg().size(); i++) {
-				Trkseg seg = trk.getTrkseg().get(i);
-				/*
-				 * each tracksegment needs at least 2 trackpoints, therefore
-				 * skip tracksegments having only one trackpoint
-				 */
-				ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
-				// loop through trackpoints
-				for (int u = 0; u < seg.getTrkpt().size(); u++) {
-					Trkpt trkpt = seg.getTrkpt().get(u);
-					BigDecimal ele;
-					// TODO find better way to handle data if -e attribute is
-					// not set
-					if (trkpt.getEle() != null) {
-						ele = trkpt.getEle();
-					} else {
-						ele = new BigDecimal(-999.0);
-					}
-					Coordinate c = new Coordinate(trkpt.getLon().doubleValue(),
-							trkpt.getLat().doubleValue(), ele.doubleValue());
-
-					if (filter.isInBbox(c)) {
-						coords.add(c);
-					} else {
-						if (coords.size() > 1) {
-							linestrings.add(geomF.createLineString(coords
-									.toArray(new Coordinate[coords.size()])));
-						}
-						coords = new ArrayList<Coordinate>();
-					}
+		// loop through track segements
+		for (int i = 0; i < trk.getTrkseg().size(); i++) {
+			Trkseg seg = trk.getTrkseg().get(i);
+			/*
+			 * each tracksegment needs at least 2 trackpoints, therefore skip
+			 * tracksegments having only one trackpoint
+			 */
+			ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
+			// loop through trackpoints
+			for (int u = 0; u < seg.getTrkpt().size(); u++) {
+				Trkpt trkpt = seg.getTrkpt().get(u);
+				BigDecimal ele;
+				// TODO find better way to handle data if -e attribute is
+				// not set
+				if (trkpt.getEle() != null) {
+					ele = trkpt.getEle();
+				} else {
+					ele = new BigDecimal(-999.0);
 				}
-				// avoid linestring with only one point
-				if (coords.size() > 1) {
-					linestrings.add(geomF.createLineString(coords
-							.toArray(new Coordinate[coords.size()])));
-				}
+				Coordinate c = new Coordinate(trkpt.getLon().doubleValue(), trkpt.getLat().doubleValue(),
+						ele.doubleValue());
 
+				if (filter.isInBbox(c)) {
+					coords.add(c);
+				} else {
+					if (coords.size() > 1) {
+						linestrings.add(geomF.createLineString(coords.toArray(new Coordinate[coords.size()])));
+					}
+					coords = new ArrayList<Coordinate>();
+				}
+			}
+			// avoid linestring with only one point
+			if (coords.size() > 1) {
+				linestrings.add(geomF.createLineString(coords.toArray(new Coordinate[coords.size()])));
 			}
 		}
 		if (linestrings.size() > 0) {
-			return geomF.createMultiLineString(linestrings
-					.toArray(new LineString[linestrings.size()]));
+			return geomF.createMultiLineString(linestrings.toArray(new LineString[linestrings.size()]));
 		} else {
 			return null;
 		}

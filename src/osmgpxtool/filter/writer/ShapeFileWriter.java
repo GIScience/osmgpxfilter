@@ -83,15 +83,13 @@ public class ShapeFileWriter implements Writer {
 			params.put("url", file.toURI().toURL());
 			params.put("create spatial index", Boolean.TRUE);
 
-			dataStore = (ShapefileDataStore) dataStoreFactory
-					.createNewDataStore(params);
+			dataStore = (ShapefileDataStore) dataStoreFactory.createNewDataStore(params);
 			dataStore.createSchema(TYPE);
 
 			// define transaction
 			transaction = new DefaultTransaction("create");
 			String typeName = dataStore.getTypeNames()[0];
-			SimpleFeatureSource featureSource = dataStore
-					.getFeatureSource(typeName);
+			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
 			if (featureSource instanceof SimpleFeatureStore) {
 				featureStore = (SimpleFeatureStore) featureSource;
 
@@ -124,86 +122,86 @@ public class ShapeFileWriter implements Writer {
 	@Override
 	public void write(Gpx gpx, String filename, GpxFile metadata) {
 		if (metadata == null) {
-			LOGGER.warn("Skipped because of missing metadata: "+ filename);
+			LOGGER.warn("Skipped because of missing metadata: " + filename);
 		} else {
-			if (filter.check(gpx)) {
+			for (int i = 0; i < gpx.getTrk().size(); i++) {
+				Trk trk = gpx.getTrk().get(i);
+				if (filter.check(trk)) {
 
-				List<SimpleFeature> featureList = gpxToFeatureList(gpx,
-						metadata.getId());
-				SimpleFeatureCollection collection = new ListFeatureCollection(
-						featureStore.getSchema(), featureList);
-				/*
-				 * Write the featurecollection to the shapefile
-				 */
-				try {
-
-					featureStore.addFeatures(collection);
-
-					// save features to file
-					transaction.commit();
-				} catch (IOException e) {
-					LOGGER.error("Error while writing to shapefile. Last transaction is beeing rolled back.");
+					List<SimpleFeature> featureList = gpxToFeatureList(trk, metadata.getId(), i);
+					SimpleFeatureCollection collection = new ListFeatureCollection(featureStore.getSchema(),
+							featureList);
+					/*
+					 * Write the featurecollection to the shapefile
+					 */
 					try {
-						transaction.rollback();
-					} catch (IOException e1) {
-						LOGGER.error("Could not roll back transaction.");
-						e1.printStackTrace();
+
+						featureStore.addFeatures(collection);
+
+						// save features to file
+						// transaction.commit();
+					} catch (IOException e) {
+						LOGGER.error("Error while writing to shapefile. Last transaction is beeing rolled back.");
+						try {
+							transaction.rollback();
+						} catch (IOException e1) {
+							LOGGER.error("Could not roll back transaction.");
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
 					}
-					e.printStackTrace();
 				}
 			}
 		}
 	}
 
-	private List<SimpleFeature> gpxToFeatureList(Gpx gpx, int gpx_id) {
+	private List<SimpleFeature> gpxToFeatureList(Trk trk, int gpx_id, int trk_id) {
 		List<SimpleFeature> featureList = new ArrayList<SimpleFeature>();
 		// loop through tracks
-		for (int trk_id = 0; trk_id < gpx.getTrk().size(); trk_id++) {
-			Trk trk = gpx.getTrk().get(trk_id);
-			// loop through track segements
-			for (int trkseg_id = 0; trkseg_id < trk.getTrkseg().size(); trkseg_id++) {
-				Trkseg seg = trk.getTrkseg().get(trkseg_id);
 
-				// loop through trackpoints
-				for (int trkpt_id = 0; trkpt_id < seg.getTrkpt().size(); trkpt_id++) {
-					Trkpt trkpt = seg.getTrkpt().get(trkpt_id);
-					BigDecimal ele;
-					// TODO find better way to handle data if -e attribute is
-					// not set
-					if (trkpt.getEle() != null) {
-						ele = trkpt.getEle();
-					} else {
-						ele = new BigDecimal(-999.0);
-					}
+		// loop through track segements
+		for (int trkseg_id = 0; trkseg_id < trk.getTrkseg().size(); trkseg_id++) {
+			Trkseg seg = trk.getTrkseg().get(trkseg_id);
 
-					// add data to featureBuilder and create feature
-					// Coordinate c = new
-					// Coordinate(trkpt.getLon().doubleValue(),
-					// trkpt.getLat().doubleValue(), ele.doubleValue());
-					Coordinate c = new Coordinate(trkpt.getLon().doubleValue(),
-							trkpt.getLat().doubleValue(), ele.doubleValue());
-					Point point = geomF.createPoint(c);
-					featureBuilder.add(point);
-					featureBuilder.add(gpx_id);
-					featureBuilder.add(trk_id);
-					featureBuilder.add(trkseg_id);
-					featureBuilder.add(trkpt_id);
-					if (trkpt.getTime() != null) {
-						featureBuilder.add(trkpt.getTime().toString());
-					} else {
-						featureBuilder.add(null);
-					}
-
-					featureBuilder.add(ele.doubleValue());
-
-					SimpleFeature feature = featureBuilder.buildFeature(null);
-					// if parameter -c is set (clip at bounding box)
-					if (filter.isInBbox(c)) {
-						featureList.add(feature);
-					}
+			// loop through trackpoints
+			for (int trkpt_id = 0; trkpt_id < seg.getTrkpt().size(); trkpt_id++) {
+				Trkpt trkpt = seg.getTrkpt().get(trkpt_id);
+				BigDecimal ele;
+				// TODO find better way to handle data if -e attribute is
+				// not set
+				if (trkpt.getEle() != null) {
+					ele = trkpt.getEle();
+				} else {
+					ele = new BigDecimal(-999.0);
 				}
 
+				// add data to featureBuilder and create feature
+				// Coordinate c = new
+				// Coordinate(trkpt.getLon().doubleValue(),
+				// trkpt.getLat().doubleValue(), ele.doubleValue());
+				Coordinate c = new Coordinate(trkpt.getLon().doubleValue(), trkpt.getLat().doubleValue(),
+						ele.doubleValue());
+				Point point = geomF.createPoint(c);
+				featureBuilder.add(point);
+				featureBuilder.add(gpx_id);
+				featureBuilder.add(trk_id);
+				featureBuilder.add(trkseg_id);
+				featureBuilder.add(trkpt_id);
+				if (trkpt.getTime() != null) {
+					featureBuilder.add(trkpt.getTime().toString());
+				} else {
+					featureBuilder.add(null);
+				}
+
+				featureBuilder.add(ele.doubleValue());
+
+				SimpleFeature feature = featureBuilder.buildFeature(null);
+				// if parameter -c is set (clip at bounding box)
+				if (filter.isInBbox(c)) {
+					featureList.add(feature);
+				}
 			}
+
 		}
 		if (featureList.isEmpty()) {
 			return null;
@@ -221,6 +219,7 @@ public class ShapeFileWriter implements Writer {
 	public void close() {
 		try {
 			if (transaction != null) {
+				transaction.commit();
 				transaction.close();
 			}
 		} catch (IOException e) {

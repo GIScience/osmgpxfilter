@@ -19,9 +19,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
-import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile.Tags;
-
 
 /**
  * <p>Java class for gpxFiles element declaration.

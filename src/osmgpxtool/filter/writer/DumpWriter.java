@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import osmgpxtool.filter.GpxFilter;
 import osmgpxtool.filter.gpx.schema.Gpx;
+import osmgpxtool.filter.gpx.schema.Gpx.Trk;
 import osmgpxtool.filter.metadata.schema.GpxFiles;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
@@ -81,19 +82,24 @@ public class DumpWriter implements Writer {
 
 	}
 
-
 	@Override
 	public void write(Gpx gpx, String filename, GpxFile metadata) {
 		if (metadata == null) {
-			LOGGER.warn("Skipped because of missing metadata: "+ filename);
+			LOGGER.warn("Skipped because of missing metadata: " + filename);
 		} else {
-			if (filter.check(gpx)) {
+			// is all tracks of gpx file pass the filter, write gpx file.
+			boolean passesFilter = false;
+			for (Trk trk : gpx.getTrk()) {
+				if (filter.check(trk)) {
+					passesFilter = true;
+				}
+			}
+			if (passesFilter) {
 				metadataFile.getGpxFile().add(metadata);
 				try {
 					os = new ByteArrayOutputStream();
 					jaxbMarshaller.marshal(gpx, os);
-					TarArchiveEntry tarEntry = new TarArchiveEntry(filename,
-							true);
+					TarArchiveEntry tarEntry = new TarArchiveEntry(filename, true);
 					tarEntry.setSize(os.size());
 					tarOut.putArchiveEntry(tarEntry);
 					tarOut.write(os.toByteArray());
@@ -125,12 +131,10 @@ public class DumpWriter implements Writer {
 
 	private void writeMetadataFile() {
 		try {
-			JAXBContext jaxbContextMeta = JAXBContext
-					.newInstance(GpxFiles.class);
+			JAXBContext jaxbContextMeta = JAXBContext.newInstance(GpxFiles.class);
 			Marshaller jaxbMarshallerMeta = jaxbContextMeta.createMarshaller();
 			// output pretty printed
-			jaxbMarshallerMeta.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,
-					true);
+			jaxbMarshallerMeta.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			os = new ByteArrayOutputStream();
 			jaxbMarshallerMeta.marshal(metadataFile, os);
 			TarArchiveEntry tarEntry = new TarArchiveEntry(metafilename, true);
