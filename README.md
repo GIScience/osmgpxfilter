@@ -30,6 +30,13 @@ Example java -jar osmgpxfilter-0.1.jar -bbox top=49.459693 left=8.573179 bottom=
 
  ```
  
+### Citation
+
+When using this software for scientific purposes, please cite:
+
+John, S., Hahmann, S., Zipf, A., Bakillah, M., Mobasheri, A., Rousell, A. (2015): Towards deriving incline values for street networks from voluntarily collected GPS data. Poster session, GI Forum. Salzburg, Austria.
+ 
+ 
  ```
  /*|----------------------------------------------------------------------------------------------
  *|														Heidelberg University
