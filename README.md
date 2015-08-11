@@ -21,6 +21,9 @@ The data can be filtered by bounding box and/or by checking whether an elevation
  -e,--elevation                                                                           only use GPX-files if they have elevation information
  -h,--help                                                                                displays help
  -i,--input                                                                               path to gpx-planet.tar.xz
+ -ds,--datasource [dump,scrape,both] 													  "dump": only use specified dump,
+ 																						  "scrape": only scrape OSM public trace list,                                                                                                       
+                                                                                          "both": use dump and retrieve additional traces from public 																						  																						  trace list
  -wd,--write-dump <path to output.tar.xz>                                                 path to output dump file (gpx-planet.tar.xz)
  -wpg,--write-pqsql <db=gis> <user=gisuser> <password=xxx> <host=localhost> <port=5432> <geometry=[point,linestring]>   connection parameters for database
  -ws,--write-shape <path to output shape file>                                            path to output shape file
@@ -32,9 +35,12 @@ Example java -jar osmgpxfilter-0.1.jar -bbox top=49.459693 left=8.573179 bottom=
  
 ### Citation
 
+### Citation
+
 When using this software for scientific purposes, please cite:
 
-John, S., Hahmann, S., Zipf, A., Bakillah, M., Mobasheri, A., Rousell, A. (2015): Towards deriving incline values for street networks from voluntarily collected GPS data. Poster session, GI Forum. Salzburg, Austria.
+John, S., Hahmann, S., Zipf, A., Bakillah, M., Mobasheri, A., Rousell, A. (2015): [Towards deriving incline values for street networks from voluntarily collected GPS data] (http://koenigstuhl.geog.uni-heidelberg.de/publications/2015/Hahmann/GI_Forum_GPS.pdf). Poster session, GI Forum. Salzburg, Austria.
+ 
  
  
  ```
