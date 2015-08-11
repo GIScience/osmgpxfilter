@@ -11,10 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import osmgpxtool.filter.GpxFilter;
-import osmgpxtool.filter.gpx.schema.Gpx;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema10.Gpx;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg.Trkpt;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -252,5 +252,16 @@ public class PGSqlWriter implements Writer {
 			e.printStackTrace();
 		}
 
+	}
+	@Override
+	public GpxFilter getFilter() {
+		
+		return filter;
+	}
+
+	@Override
+	public void setMetadataFilename(String filename) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -3,7 +3,8 @@
  */
 package osmgpxtool.filter.writer;
 
-import osmgpxtool.filter.gpx.schema.Gpx;
+import osmgpxtool.filter.GpxFilter;
+import osmgpxtool.filter.gpx.schema10.Gpx;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
 public interface Writer {
@@ -18,4 +19,7 @@ public interface Writer {
 	public void init();
 
 	public void close();
+	
+	public GpxFilter getFilter();
+public void setMetadataFilename(String filename);
 }

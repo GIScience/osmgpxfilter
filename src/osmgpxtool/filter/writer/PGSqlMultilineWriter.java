@@ -12,10 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import osmgpxtool.filter.GpxFilter;
-import osmgpxtool.filter.gpx.schema.Gpx;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema10.Gpx;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg.Trkpt;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -139,12 +139,7 @@ public class PGSqlMultilineWriter implements Writer {
 			// for each track in gpx
 			for (int i = 0; i < gpx.getTrk().size(); i++) {
 				Trk trk = gpx.getTrk().get(i);
-				//LOGGER.info("gpx_id: "+metadata.getId() + " trk_id: " + i +" userid: "+ metadata.getUser());
 				if (filter.check(trk)) {
-					if (trk.getTrkseg().size()>1){
-						LOGGER.info("Track has more than one segment.");
-						LOGGER.info("gpx_id: "+metadata.getId() + " trk_id: " + i +" userid: "+ metadata.getUser());
-					}
 					// prepare geometry
 					MultiLineString geom = prepareGeometry(trk);
 					if (geom != null) {
@@ -174,7 +169,6 @@ public class PGSqlMultilineWriter implements Writer {
 							insert.setObject(9, wr.write(geom), java.sql.Types.BINARY);
 
 							insert.executeUpdate();
-							// LOGGER.info("insert: " + metadata.getId());
 
 						} catch (SQLException e) {
 							e.printStackTrace();
@@ -258,5 +252,16 @@ public class PGSqlMultilineWriter implements Writer {
 			e.printStackTrace();
 		}
 
+	}
+	@Override
+	public GpxFilter getFilter() {
+		
+		return filter;
+	}
+
+	@Override
+	public void setMetadataFilename(String filename) {
+		// TODO Auto-generated method stub
+		
 	}
 }

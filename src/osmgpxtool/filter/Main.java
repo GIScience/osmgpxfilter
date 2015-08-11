@@ -12,20 +12,10 @@
 
 package osmgpxtool.filter;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -35,27 +25,22 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.filter.gpx.schema.Gpx;
-import osmgpxtool.filter.metadata.schema.GpxFiles;
-import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
+import osmgpxtool.filter.reader.OsmGpxDumpReader;
+import osmgpxtool.filter.reader.OsmGpxScraper;
 import osmgpxtool.filter.writer.DumpWriter;
 import osmgpxtool.filter.writer.PGSqlMultilineWriter;
 import osmgpxtool.filter.writer.PGSqlWriter;
 import osmgpxtool.filter.writer.ShapeFileWriter;
 import osmgpxtool.filter.writer.Writer;
-import osmgpxtool.util.Progress;
 import osmgpxtool.util.TimeTools;
 
 public class Main {
 	static Logger LOGGER = LoggerFactory.getLogger(Main.class);
-//	private static String datasource;
+	private static String datasource;
 	private static String tarFile;
 	private static String dbHost;
 	private static String dbPort;
@@ -72,8 +57,6 @@ public class Main {
 	private static Double bboxTop;
 	private static Double bboxBottom;
 	private static Writer writer = null;
-	private static TreeMap<Integer, GpxFile> metadata = null;
-	private static String metadataFilename;
 	private static Options cmdOptions;
 	private static CommandLine cmd = null;
 
@@ -85,15 +68,9 @@ public class Main {
 		// init Filter
 		GpxFilter filter = new GpxFilter(bboxLeft, bboxRight, bboxBottom, bboxTop, bboxClip, elevationOnly);
 
-		// initialize reader
-		TarArchiveInputStream tarIn = new TarArchiveInputStream(
-				new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.XZ,
-						new BufferedInputStream(new FileInputStream(tarFile))));
-		int gpxFileListSize = readMetadata();
-
 		// init writer
 		if (cmd.hasOption("wd")) {
-			writer = new DumpWriter(filter, outputFileDump, metadataFilename);
+			writer = new DumpWriter(filter, outputFileDump);
 		} else if (cmd.hasOption("wpg")) {
 			if (dbGeometry.equals("point")) {
 				writer = new PGSqlWriter(filter, dbName, dbUser, dbPassword, dbHost, dbPort);
@@ -106,42 +83,16 @@ public class Main {
 		}
 		writer.init();
 
-		TarArchiveEntry tarEntry;
-		LOGGER.info("Start processing " + gpxFileListSize + " gpx files...");
-		Progress p = new Progress();
-		p.start(gpxFileListSize);
-		int progressPercentPrinted = -1;
-		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
-			if (tarEntry.isFile()) {
-				if (isGPX(tarEntry.getName())) {
-					p.increment();
-					int currentProgressPercent = (int) (Math.round(p.getProgressPercent()));
-					if (currentProgressPercent % 5 == 0 && currentProgressPercent != progressPercentPrinted) {
-						LOGGER.info(p.getProgressMessage());
-						progressPercentPrinted = currentProgressPercent;
-					}
-					byte[] content = new byte[(int) tarEntry.getSize()];
-					tarIn.read(content);
-					// write GPX file with specified writer
-					Gpx gpx = null;
-					try {
-						JAXBContext jc = JAXBContext.newInstance("osmgpxtool.filter.gpx.schema");
-						Unmarshaller unmarshaller = jc.createUnmarshaller();
-						JAXBElement<Gpx> root = (JAXBElement<Gpx>) unmarshaller.unmarshal(new StreamSource(
-								new ByteArrayInputStream(content)), Gpx.class);
-						gpx = root.getValue();
-						int id = getGpxId(tarEntry);
-
-						writer.write(gpx, tarEntry.getName(), metadata.get(id));
-
-					} catch (JAXBException ex) {
-						ex.printStackTrace();
-					}
-				}
-			}
-
+		if (datasource.equals("dump")) {
+			//if dumpwriter is chosen
+			OsmGpxDumpReader reader = new OsmGpxDumpReader(writer, tarFile);
+			reader.read();
+		} else if (datasource.equals("both")) {
+			 readFromCombinedSource();
+		} else if (datasource.equals("scrape")) {
+			 OsmGpxScraper scraper = new OsmGpxScraper(writer);
+			 scraper.scrape();
 		}
-		tarIn.close();
 
 		writer.close();
 		filter.printStats();
@@ -150,6 +101,21 @@ public class Main {
 																			// seconds
 		LOGGER.info("Filter task done... Execution time: " + executionTime + " seconds ("
 				+ TimeTools.convertMillisToHourMinuteSecond(executionTime) + ")");
+	}
+
+
+
+
+
+
+	private static void readFromCombinedSource() throws CompressorException, IOException {
+		OsmGpxDumpReader dumpReader = new OsmGpxDumpReader(writer, tarFile);
+		List<Integer> writtenIDs = dumpReader.read();
+		String baseName = dumpReader.getBaseName();
+		OsmGpxScraper scraper = new OsmGpxScraper(writer);
+		scraper.setWrittenIDs(writtenIDs);
+		scraper.setBaseName(baseName);
+		scraper.scrape();
 	}
 
 	private static void parseArguments(String[] args) {
@@ -181,12 +147,12 @@ public class Main {
 		// option for input GPX dump packed and compressed (as *.tar.xz)
 		cmdOptions.addOption(OptionBuilder.withLongOpt("input").withDescription("path to gpx-planet.tar.xz").hasArg()
 				.create("i"));
-//		cmdOptions
-//				.addOption(OptionBuilder
-//						.withLongOpt("datasource")
-//						.withDescription(
-//								"[dump,api,both]\n\"dump\": only use specified dump, \n\"api\": only use OSM Api to retrieve data, \n\"both\": use dump and retrieve additional traces from api ")
-//						.hasArg().isRequired().create("ds"));
+		cmdOptions
+				.addOption(OptionBuilder
+						.withLongOpt("datasource")
+						.withDescription(
+								"[dump,scrape,both]\n\"dump\": only use specified dump, \n\"scrape\": only scrape OSM public trace list, \n\"both\": use dump and retrieve additional traces from public trace list")
+						.hasArg().isRequired().create("ds"));
 		cmdOptions.addOption(new Option("e", "elevation", false,
 				"only use GPX-files if they have elevation information"));
 		cmdOptions.addOption(new Option("c", "Clip", false,
@@ -253,17 +219,18 @@ public class Main {
 			}
 
 		}
-		// datasource (dump, api, both)
-//		if (cmd.hasOption("ds")) {
-//			String value = cmd.getOptionValue("ds");
-//			if (value.equals("api")|| value.equals("dump") || value.equals("both")){
-//				datasource=value;
-//			}else{
-//				throw new ParseException("Given datasource is not valid. The given value must be one of the following: \"dump\", \"api\", \"both\": Check \"-h\" for help ");
-//			}
-//			
-//		}
-		
+		// datasource (dump, scrape, both)
+		if (cmd.hasOption("ds")) {
+			String value = cmd.getOptionValue("ds");
+			if (value.equals("dump") || value.equals("both")|| value.equals("scrape")) {
+				datasource = value;
+			} else {
+				throw new ParseException(
+						"Given datasource is not valid. The given value must be one of the following: \"dump\", \"scrape\", \"both\": Check \"-h\" for help ");
+			}
+
+		}
+
 		// parse database attributes
 		if (cmd.hasOption("wpg")) {
 			if (cmd.getOptionValues("wpg").length == 6) {
@@ -365,66 +332,7 @@ public class Main {
 		return true;
 	}
 
-	private static int readMetadata() throws IOException, CompressorException {
+	
 
-		int gpxFileListSize = 0;
 
-		// initialize reader
-		TarArchiveInputStream tarIn = new TarArchiveInputStream(
-				new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.XZ,
-						new BufferedInputStream(new FileInputStream(tarFile))));
-
-		TarArchiveEntry tarEntry;
-		while ((tarEntry = tarIn.getNextTarEntry()) != null) {
-			if (isMetaXML(tarEntry.getName())) {
-				metadataFilename = tarEntry.getName();
-				// LOGGER.info("Parsing metadata...");
-				byte[] content = new byte[(int) tarEntry.getSize()];
-				tarIn.read(content);
-				// parse metadata file
-				try {
-					JAXBContext jc = JAXBContext.newInstance("osmgpxtool.filter.metadata.schema");
-					Unmarshaller unmarshaller = jc.createUnmarshaller();
-					JAXBElement<GpxFiles> root = (JAXBElement<GpxFiles>) unmarshaller.unmarshal(new StreamSource(
-							new ByteArrayInputStream(content)), GpxFiles.class);
-					GpxFiles gpxFiles = root.getValue();
-					metadata = new TreeMap<Integer, GpxFile>();
-					List<GpxFile> gpxFileList = gpxFiles.getGpxFile();
-					gpxFileListSize = gpxFileList.size();
-					LOGGER.info("Parsing " + gpxFileList.size() + " metadata entries...");
-					for (int w = 0; w < gpxFileList.size(); w++) {
-						GpxFile meta = gpxFileList.get(w);
-						metadata.put(meta.getId(), meta);
-					}
-
-				} catch (JAXBException ex) {
-					ex.printStackTrace();
-				}
-			}
-
-		}
-		tarIn.close();
-		LOGGER.info("Metadata successfully parsed. Total number of Gpx-Files in gpx archive: " + metadata.size());
-		return gpxFileListSize;
-	}
-
-	private static int getGpxId(TarArchiveEntry tarEntry) {
-		String n = tarEntry.getName();
-		return Integer.valueOf(n.substring(n.lastIndexOf("/") + 1, n.lastIndexOf(".")));
-
-	}
-
-	private static boolean isMetaXML(String name) {
-		if (name.endsWith("metadata.xml")) {
-			return true;
-		} else
-			return false;
-	}
-
-	private static boolean isGPX(String name) {
-		if (name.endsWith(".gpx")) {
-			return true;
-		} else
-			return false;
-	}
 }

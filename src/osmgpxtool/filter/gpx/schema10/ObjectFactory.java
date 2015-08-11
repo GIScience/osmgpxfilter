@@ -6,16 +6,16 @@
 //
 
 
-package osmgpxtool.filter.gpx.schema;
+package osmgpxtool.filter.gpx.schema10;
 
 import javax.xml.bind.annotation.XmlRegistry;
 
-import osmgpxtool.filter.gpx.schema.Gpx.Rte;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk;
-import osmgpxtool.filter.gpx.schema.Gpx.Wpt;
-import osmgpxtool.filter.gpx.schema.Gpx.Rte.Rtept;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema10.Gpx.Rte;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema10.Gpx.Wpt;
+import osmgpxtool.filter.gpx.schema10.Gpx.Rte.Rtept;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg.Trkpt;
 
 
 /**

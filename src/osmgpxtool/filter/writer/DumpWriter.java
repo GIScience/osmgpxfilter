@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import osmgpxtool.filter.GpxFilter;
-import osmgpxtool.filter.gpx.schema.Gpx;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema10.Gpx;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk;
 import osmgpxtool.filter.metadata.schema.GpxFiles;
 import osmgpxtool.filter.metadata.schema.GpxFiles.GpxFile;
 
@@ -46,10 +46,9 @@ public class DumpWriter implements Writer {
 	 * @param outFile
 	 * @param metadataFilename
 	 */
-	public DumpWriter(GpxFilter filter, String outFile, String metadataFilename) {
+	public DumpWriter(GpxFilter filter, String outFile) {
 		super();
 		this.outFile = outFile;
-		this.metafilename = metadataFilename;
 		this.filter = filter;
 	}
 
@@ -87,10 +86,10 @@ public class DumpWriter implements Writer {
 		if (metadata == null) {
 			LOGGER.warn("Skipped because of missing metadata: " + filename);
 		} else {
-			// is all tracks of gpx file pass the filter, write gpx file.
+			// if all tracks of gpx file pass the filter, write gpx file.
 			boolean passesFilter = false;
 			for (Trk trk : gpx.getTrk()) {
-				if (filter.check(trk)) {
+				if ( filter.check(trk)) {
 					passesFilter = true;
 				}
 			}
@@ -115,7 +114,7 @@ public class DumpWriter implements Writer {
 	public void close() {
 		writeMetadataFile();
 		try {
-			if (tarOut != null)
+			if (tarOut != null)		
 				tarOut.close();
 			if (fOut != null)
 				fOut.close();
@@ -147,5 +146,16 @@ public class DumpWriter implements Writer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public GpxFilter getFilter() {
+
+		return filter;
+	}
+
+	@Override
+	public void setMetadataFilename(String filename) {
+		this.metafilename = filename;
 	}
 }

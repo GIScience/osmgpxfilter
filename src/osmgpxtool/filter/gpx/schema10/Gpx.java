@@ -6,7 +6,7 @@
 //
 
 
-package osmgpxtool.filter.gpx.schema;
+package osmgpxtool.filter.gpx.schema10;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -2021,7 +2021,12 @@ public class Gpx {
             }
 
 
-            /**
+            public void setTrkpt(List<Trkpt> trkpt) {
+				this.trkpt = trkpt;
+			}
+
+
+			/**
              * <p>Java class for anonymous complex type.
              * 
              * <p>The following schema fragment specifies the expected content contained within this class.
