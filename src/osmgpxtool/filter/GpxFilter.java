@@ -17,9 +17,9 @@ import java.math.BigDecimal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import osmgpxtool.filter.gpx.schema.Gpx.Trk;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg;
-import osmgpxtool.filter.gpx.schema.Gpx.Trk.Trkseg.Trkpt;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg;
+import osmgpxtool.filter.gpx.schema10.Gpx.Trk.Trkseg.Trkpt;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -57,7 +57,9 @@ public class GpxFilter {
 		}
 		printArgs();
 	}
-
+public Envelope getEnvelope(){
+	return env;
+}
 	private void printArgs() {
 		LOGGER.info("Filter set with following Arguments:");
 		if (bboxLeft != null && bboxRight != null && bboxTop != null && bboxBottom != null) {
@@ -98,13 +100,11 @@ public class GpxFilter {
 		}
 
 		if (elevationOnly == true) {
-			// elevationOnly is set. check if trackpoints have elevation
-			// attribute
+			// elevationOnly is set.
 			hasEle = hasElevationAttribute(trk);
 		} else {
 			hasEle = true;
 		}
-
 		if (hasEle == true && isInBbox == true) {
 			passed++;
 			return true;
@@ -164,7 +164,6 @@ public class GpxFilter {
 			return true;
 		} else {
 			// elevation value is the same for all trackpoints
-			// LOGGER.warn("elevation value is the same for all trackpoints. Track will be skipped.");
 			equalEle++;
 			return false;
 			
